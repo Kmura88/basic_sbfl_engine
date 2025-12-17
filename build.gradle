@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'application'  
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group 'com.github.kmura88'
+version '0.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+	implementation 'org.json:json:20240303' 
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation("org.assertj:assertj-core:3.11.1")
+}
+/*
+application {
+    mainClass = 'LGMatcherJsonExporter.App'
+}
+
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': 'LGMatcherJsonExporter.App'
+    }
+}
+*/
