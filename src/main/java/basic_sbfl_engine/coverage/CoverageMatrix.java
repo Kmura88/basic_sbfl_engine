@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+//TODO 消す？？
 public class CoverageMatrix {
 
     // Map<クラス名, Map<行番号, テストごとの実行有無>>

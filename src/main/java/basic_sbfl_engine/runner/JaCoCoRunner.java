@@ -7,35 +7,36 @@ import org.jacoco.core.runtime.IRuntime;
 import org.jacoco.core.runtime.LoggerRuntime;
 import org.jacoco.core.runtime.RuntimeData;
 
-
+/**
+ * Jacocoを利用してカバレッジ計測を行うクラス <br>
+ * startup() → collect() → shutdown()が一連の流れ <br>
+ * 計測対象は事前にInstrumentしておく必要がある
+ */
 public class JaCoCoRunner {
     private final RuntimeData runtimedata;
     private final Instrumenter instrumenter;
     private final IRuntime runtime;
 
+    /**
+     * コンストラクタ
+     */
     public JaCoCoRunner() {
-    	// カバレッジ計測の準備
     	this.runtime = new LoggerRuntime();
         this.runtimedata = new RuntimeData();
         this.instrumenter = new Instrumenter(runtime);
-        try {
-            runtime.startup(runtimedata);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
      * バイト配列のinstrument化にはこのインスタンスを利用
-     * @return Instrumenter
+     * @return Instrumenterインスタンス
      */
     public Instrumenter getInstrumenter() {
         return instrumenter;
     }
 
     /**
-     * 計測データの確定とExecutionDataStoreの返却
-     * @return クラスごとの命令実行フラグのデータ
+     * 計測済みデータからExecutionDataStoreを返却するメソッド
+     * @return ExecutionDataStore
      */
     public ExecutionDataStore collect() {
     	// 
@@ -46,14 +47,25 @@ public class JaCoCoRunner {
     }
 
     /**
-     * 取得したカバレッジ情報をリセットする
+     * カバレッジ情報の収集を開始させるメソッド
+     */
+    public void startup() {
+        try {
+            runtime.startup(runtimedata);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    /**
+     * 取得したカバレッジ情報をリセットするメソッド
      */
     public void reset() {
         runtimedata.reset();
     }
     
     /**
-     * カバレッジ情報の収集を終了する
+     * カバレッジ情報の収集を終了するメソッド
      */
     public void shutdown() {
     	runtime.shutdown();

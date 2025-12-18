@@ -3,6 +3,7 @@ package basic_sbfl_engine.config;
 import java.nio.file.Path;
 import java.util.List;
 
+// TODO picocli使う
 public class SBFLConfig {
 
     private Path projectPath;

@@ -13,7 +13,7 @@ public class MemoryClassLoader extends ClassLoader {
     private final Map<String, byte[]> definitions = new HashMap<>();
 
     /**
-     * クラス名とバイト配列を結びつけて保管する
+     * クラス名とバイト配列を結びつけて管理する
      * @param fqcn クラス名(ex: com.example.Main)
      * @param bytes バイト配列
      */

@@ -17,11 +17,16 @@ import org.jacoco.core.runtime.LoggerRuntime;
 import org.jacoco.core.runtime.RuntimeData;
 
 /**
- * ExecutionDataStoreを解析するクラス
+ * ExecutionDataStoreを解析するクラス <br>
+ * addsubject()で解析対象を追加し、 analyze()で解析する
  */
 public class ExecutionDataAnalyzer {
+
 	private final Map<String, byte[]> subjects;
 	
+	/**
+	 * コンストラクタ
+	 */
 	public ExecutionDataAnalyzer(){
 		this.subjects = new HashMap<>(); 
 	}
@@ -29,7 +34,7 @@ public class ExecutionDataAnalyzer {
 	/**
 	 * 解析対象の追加
 	 * @param fqcn クラス名(ex: com.example.Main)
-	 * @param bytes instrunmentされてないバイト配列
+	 * @param bytes instrunmentされてない バイト配列
 	 */
 	public void addSubject(String fqcn, byte[] bytes) {
 		this.subjects.put(fqcn, bytes);
@@ -54,6 +59,7 @@ public class ExecutionDataAnalyzer {
 		return coverageBuilder;
 	}
 	
+	//TODO run()消す
 	public void run() throws Exception {
 		 // 計測対象のクラス名（完全修飾名）
         final String targetClassName = "example.Calculator";
@@ -127,6 +133,7 @@ public class ExecutionDataAnalyzer {
         
 	}
 	
+	//TODO 消す
 	private static void printCoverage(CoverageBuilder coverageBuilder) {
         System.out.println("--- JaCoCo Coverage Analysis ---");
         for (final IClassCoverage cc : coverageBuilder.getClasses()) {
@@ -148,47 +155,4 @@ public class ExecutionDataAnalyzer {
         System.out.printf("  %s: %d missed, %d covered (%.2f%%)%n", unit, missed, covered, coveredRatio * 100);
         System.out.printf(" total: %d\n",total);
     }
-	
-	public static class MemoryClassLoader extends ClassLoader { // ClassLoaderの子クラス
-        private final java.util.Map<String, byte[]> definitions = new java.util.HashMap<>();
-
-        public void addDefinition(final String name, final byte[] bytes) {
-            definitions.put(name, bytes);
-        }
-
-        @Override
-        protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-            final byte[] bytes = definitions.get(name);
-            if (bytes != null) {
-                return defineClass(name, bytes, 0, bytes.length);
-            }
-            return super.loadClass(name, resolve);
-        }
-    }
-	
-	/**
-	 * CoverageBuilder内のクラス毎のカバレッジ情報をBoolean配列に変換する
-	 * 配列内の
-	 * @param 計測済みのCoverageBuilder
-	 * @return Map<クラス名,各行が通ったか否か>
-	 */
-	public Map<String, boolean[]> convertCoverage(CoverageBuilder coverageBuilder) {
-		Map<String, boolean[]> ret = new HashMap<>();
-        for (IClassCoverage cc : coverageBuilder.getClasses()) {
-            int lastLine = cc.getLastLine();
-            boolean[] covered = new boolean[lastLine + 1];
-            for (int line = 0; line <= lastLine; line++) {
-                int status = cc.getLine(line).getStatus();
-                if (status == ICounter.FULLY_COVERED || status == ICounter.PARTLY_COVERED) {
-                    covered[line] = true;
-                } else {
-                	covered[line] = false;
-                }
-            }
-            System.out.println(cc.getName()); // TODO 後で消す
-            ret.put(cc.getName(), covered);
-        }
-        return ret;
-    }
-	
 }

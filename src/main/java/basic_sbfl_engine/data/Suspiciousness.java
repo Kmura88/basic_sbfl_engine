@@ -35,11 +35,6 @@ public class Suspiciousness implements Comparable<Suspiciousness> {
 
     @Override
     public String toString() {
-        return String.format(
-            "%s:%d -> %f",
-            className,
-            line,
-            value
-        );
+        return String.format("%s:%d -> %f",className,line,value);
     }
 }
