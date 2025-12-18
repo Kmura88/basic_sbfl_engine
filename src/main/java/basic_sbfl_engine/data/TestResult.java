@@ -1,9 +1,15 @@
-package basic_sbfl_engine.model;
+package basic_sbfl_engine.data;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+//TODO staticなmakeTestResultメソッドを作る return TestResult
+
+/**
+ * CoverageBuilderを各クラスの各行の実行データに変換して保存する
+ */
 
 public class TestResult {
 

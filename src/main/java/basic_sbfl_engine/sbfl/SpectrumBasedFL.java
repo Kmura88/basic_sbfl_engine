@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import basic_sbfl_engine.coverage.CoverageMatrix;
-import basic_sbfl_engine.model.Suspiciousness;
+import basic_sbfl_engine.data.Suspiciousness;
 
 public abstract class SpectrumBasedFL {
 

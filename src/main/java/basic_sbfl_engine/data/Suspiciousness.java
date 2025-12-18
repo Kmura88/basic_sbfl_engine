@@ -1,4 +1,4 @@
-package basic_sbfl_engine.model;
+package basic_sbfl_engine.data;
 
 public class Suspiciousness implements Comparable<Suspiciousness> {
 

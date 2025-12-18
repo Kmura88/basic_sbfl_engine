@@ -3,7 +3,7 @@ package basic_sbfl_engine.io;
 import java.io.FileWriter;
 import java.util.List;
 
-import basic_sbfl_engine.model.Suspiciousness;
+import basic_sbfl_engine.data.Suspiciousness;
 
 public class CSVWriter {
 

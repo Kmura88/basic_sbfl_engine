@@ -1,5 +1,6 @@
 package basic_sbfl_engine.runner;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,22 +16,42 @@ import org.jacoco.core.runtime.IRuntime;
 import org.jacoco.core.runtime.LoggerRuntime;
 import org.jacoco.core.runtime.RuntimeData;
 
-// TODO 後で消すクラス処理作成用
-
-public class CoverageAnalyzer {
+/**
+ * ExecutionDataStoreを解析するクラス
+ */
+public class ExecutionDataAnalyzer {
+	private final Map<String, byte[]> subjects;
 	
-	// テスト結果を保存するフィールド
-	CoverageReport coverageReport;
-	
-	/*
-	 * コンストラクタ
-	 */
-	public CoverageAnalyzer (){
-		//coverageReport = new CoverageReport();
+	public ExecutionDataAnalyzer(){
+		this.subjects = new HashMap<>(); 
 	}
 	
-	public CoverageReport getCoverageReport() {
-		return this.coverageReport;
+	/**
+	 * 解析対象の追加
+	 * @param fqcn クラス名(ex: com.example.Main)
+	 * @param bytes instrunmentされてないバイト配列
+	 */
+	public void addSubject(String fqcn, byte[] bytes) {
+		this.subjects.put(fqcn, bytes);
+	}
+	
+
+	/**
+	 * addSubject()で追加された解析対象に対して解析
+	 * @param executionData
+	 * @return CoverageBuilder
+	 */
+	public CoverageBuilder analyze(ExecutionDataStore executionData) {
+		final CoverageBuilder coverageBuilder = new CoverageBuilder();
+		final Analyzer analyzer = new Analyzer(executionData, coverageBuilder);
+		this.subjects.forEach((fqcn, bytes) -> {
+			try {
+				analyzer.analyzeClass(bytes, fqcn);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+		return coverageBuilder;
 	}
 	
 	public void run() throws Exception {
