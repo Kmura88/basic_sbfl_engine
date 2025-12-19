@@ -10,7 +10,7 @@ import org.jacoco.core.analysis.ICounter;
 
 /**
  * CoverageBuilderをboolean配列に変換して保存する
- * 各テスト、各クラス、各行のカバレッジの管理に対して責任を持つ
+ * 単体テストの、各クラスのカバレッジの管理に対して責任を持つ
  */
 public class TestResult {
     private final String testName;
@@ -50,15 +50,35 @@ public class TestResult {
         return coverages.keySet();
     }
     
+
     /**
+     * カバレッジ配列のlengthを取得するメソッド
      * @param fqcn クラス名
-     * @return 引数として与えられたクラスの各行のカバレッジ
+     * @return カバレッジの行数
      */
-    public boolean[] getCoverage(String fqcn) {
+    public int getLength(String fqcn) {
     	if(coverages.containsKey(fqcn)) {
-    		return coverages.get(fqcn);
+    		return coverages.get(fqcn).length;
     	}else {
-    		return new boolean[0];
+    		return -1;
+    	}
+    }
+    
+    /**
+     * クラス名と行数から通ったか否かを判定する
+     * @param fqcn クラス名
+     * @param line 行数(1スタート)
+     * @return 通ったか否か
+     */
+    public boolean getCoverage(String fqcn,int line) {
+    	if(coverages.containsKey(fqcn)) {
+    		if(0<line && line<getLength(fqcn)) {
+    	   		return coverages.get(fqcn)[line];
+    		}else {
+    	   		return false;
+    		}
+    	}else {
+    		return false;
     	}
     }
     

@@ -1,124 +1,145 @@
 package basic_sbfl_engine.runner;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.jacoco.core.analysis.CoverageBuilder;
+import org.jacoco.core.data.ExecutionDataStore;
+import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-/*
- * TODO 後で消すメモ
+
+import basic_sbfl_engine.data.TestResult;
+
+/**
+ * Junitを用いてテストメソッドを実行するクラス<br>
  * junit coreを使っているので@beforeや@afterも実行される
  */
-
 public class JUnitRunner {
 
     private final long timeout;
-    private final TimeUnit timeUnit;
+    private final MemoryClassLoader memoryClassLoader;
+    private final JaCoCoRunner jacocoRunner;
+    private final ExecutionDataAnalyzer executionDataAnalyzer;
+    private final Map<String, byte[]> classDefinitions; // <fqcn,バイトコード> 
 
     /**
-     * @param timeout  テスト1件あたりのタイムアウト
-     * @param timeUnit タイムアウト単位
+     * @param timeout  テスト1件あたりのタイムアウト(ms)
+     * @param jacocoRunner カバレッジ計測用ランナー
+     * @param ClassDefinitions 解析対象クラスのバイトコード
      */
-    public JUnitRunner(long timeout, TimeUnit timeUnit) {
+    public JUnitRunner(Map<String, byte[]> classDefinitions, long timeout) {
         this.timeout = timeout;
-        this.timeUnit = timeUnit;
+        this.classDefinitions = classDefinitions;
+        this.jacocoRunner = new JaCoCoRunner();
+        this.executionDataAnalyzer = new ExecutionDataAnalyzer();
+        this.memoryClassLoader = new MemoryClassLoader();
+    }
+    
+    private void initialize() throws IOException {
+    	
+        for (Map.Entry<String, byte[]> entry : classDefinitions.entrySet()) {
+            String fqcn = entry.getKey();
+            byte[] originalBytes = entry.getValue();
+
+            // A. 解析用: 元のバイトコードをAnalyzerに登録
+            executionDataAnalyzer.addSubject(fqcn, originalBytes);
+
+            // B. 実行用: JaCoCoでバイトコードをInstrument化(書き換え)
+            byte[] instrumentedBytes = jacocoRunner.getInstrumenter().instrument(originalBytes, fqcn);
+            
+            // C. 実行用: 書き換えたバイトコードをローダーに登録
+            memoryClassLoader.addDefinition(fqcn, instrumentedBytes);
+        }
     }
 
     /**
-     * MemoryClassLoader を使って 1 テストメソッドを実行する
-     *
-     * @param classBytesMap  クラス名 → バイト配列 のマップ ほかで用意
-     * @param testClassName  テストクラスの FQCN
-     * @param methodName     テストメソッド名
+     * テストの準備と実行を行うメインメソッド
+     * @param testClassName 実行するテストのfqcn (例: "com.example.MyTest")
+     * @return TestResultのリスト
      */
-    public TestWithCoverageResult runSingleTest(
-            Map<String, byte[]> classBytesMap,
-            String testClassName,
-            String methodName) {
+    public List<TestResult> runTests(String testClassName) {
+        List<TestResult> results = new ArrayList<>();
+        
+        try {
+            // 1. 初期化 (Instrument化 と Analyzerへの登録)
+            initialize();
+            
+            // JaCoCoランタイム起動
+            jacocoRunner.startup();
 
+            // 2. MemoryClassLoaderを使ってテストクラスをロード
+            Class<?> testClass = memoryClassLoader.loadClass(testClassName);
+
+            // 3. クラス内の全メソッドを走査
+            for (Method method : testClass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(Test.class)) {
+                     TestResult tr = runSingleTest(testClass, method.getName());
+                     results.add(tr);
+                }
+            }
+            
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("クラスのロードまたはInstrumentに失敗しました: " + testClassName, e);
+        } finally {
+            jacocoRunner.shutdown();
+        }
+        return results;
+    }
+    
+    /**
+     * 単一のテストメソッドを実行し、カバレッジ結果を返す
+     * @param testClass テストクラス
+     * @param methodName メソッド名
+     * @return TestResult
+     */
+    public TestResult runSingleTest(Class<?> testClass, String methodName) {
+        // 1. カバレッジ情報のリセット
+        jacocoRunner.reset();
+
+        boolean passed = false;
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        Callable<TestWithCoverageResult> task = () -> {
-
-            // MemoryClassLoader をテストごとに作成
-            MemoryClassLoader loader = new MemoryClassLoader();
-
-            // テスト対象のクラスをすべて登録
-            for (Map.Entry<String, byte[]> e : classBytesMap.entrySet()) {
-                loader.addDefinition(e.getKey(), e.getValue());
-            }
-
-            // このスレッドのコンテキストローダーを差し替え
-            Thread.currentThread().setContextClassLoader(loader);
-
-            try {
-                // JaCoCo をリセット
-                JaCoCoController.resetExecutionData();
-
-                // テストクラスを MemoryClassLoader でロード
-                Class<?> testClass = loader.loadClass(testClassName);
-
-                // JUnit 実行
-                JUnitCore core = new JUnitCore();
-                Request request = Request.method(testClass, methodName);
-                Result result = core.run(request);
-
-                // 成否判定
-                SbflTestResult testResult;
-                if (result.getFailureCount() == 0 && result.getIgnoreCount() == 0) {
-                    testResult = SbflTestResult.success();
-                } else {
-                    Throwable t = null;
-                    if (!result.getFailures().isEmpty()) {
-                        Failure f = result.getFailures().get(0);
-                        t = f.getException();
-                    }
-                    testResult = SbflTestResult.failure(t);
-                }
-
-                // カバレッジ取得
-                CoverageData coverage = JaCoCoController.dumpExecutionData();
-
-                return new TestWithCoverageResult(testResult, coverage);
-
-            } finally {
-                Thread.currentThread().setContextClassLoader(null);
-            }
-        };
-
-        Future<TestWithCoverageResult> future = executor.submit(task);
-
         try {
-            return future.get(timeout, timeUnit);
+            // 2. JUnit実行タスクの作成
+            Request request = Request.method(testClass, methodName);
+            Callable<Result> task = () -> new JUnitCore().run(request);
+            
+            // 3. タイムアウト付きで実行
+            Future<Result> future = executor.submit(task);
+            Result result = future.get(timeout, TimeUnit.MILLISECONDS);
+            
+            passed = result.wasSuccessful();
 
         } catch (TimeoutException e) {
-            future.cancel(true);
-            return new TestWithCoverageResult(SbflTestResult.timeout(), new CoverageData(new byte[0]));
-
-        } catch (Exception e) {
-            return new TestWithCoverageResult(SbflTestResult.failure(e), new CoverageData(new byte[0]));
-
+            System.err.println("Test timed out: " + methodName);
+            passed = false;
+            // タイムアウト時はスレッドが残らないようにshutdownNowする等の処理が必要な場合あり
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            passed = false;
         } finally {
             executor.shutdownNow();
         }
+
+        // 4. カバレッジデータの収集・解析
+        ExecutionDataStore eds = jacocoRunner.collect();
+        CoverageBuilder cb = executionDataAnalyzer.analyze(eds);
+        
+        // 5. TestResultの生成
+        return new TestResult(methodName, cb, passed);
     }
 
-    // ======== 結果 DTO ========
-
-    public static final class TestWithCoverageResult {
-        public final SbflTestResult testResult;
-        public final CoverageData coverage;
-
-        public TestWithCoverageResult(SbflTestResult testResult, CoverageData coverage) {
-            this.testResult = testResult;
-            this.coverage = coverage;
-        }
-    }
 }

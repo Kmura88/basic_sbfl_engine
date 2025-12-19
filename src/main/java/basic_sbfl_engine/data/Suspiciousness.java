@@ -1,40 +1,63 @@
 package basic_sbfl_engine.data;
 
-public class Suspiciousness implements Comparable<Suspiciousness> {
+/**
+ * 単一クラスの疑惑値を保存するクラス
+ */
+public class Suspiciousness {
+	private final String className;
+	private double[] values; // 1スタート
 
-    private final String className;
-    private final int line;
-    private final double value;
-
-    public Suspiciousness(String className, int line, double value) {
+	/**
+	 * サイズで初期化するコンストラクタ
+	 * @param className クラス名
+	 * @param length 疑惑値配列の初期化サイズ
+	 */
+    public Suspiciousness(String className, int length) {
         this.className = className;
-        this.line = line;
-        this.value = value;
+        this.values = new double[length+1];
     }
 
+    /**
+     * 配列で初期化するコンストラクタ
+     * @param className クラス名
+     * @param values 疑惑値配列
+     */
+    public Suspiciousness(String className, double[] values) {
+        this.className = className;
+        this.values = values;
+    }
+    
+    /**
+     * @return クラス名
+     */
     public String getClassName() {
         return className;
     }
-
-    public int getLine() {
-        return line;
+    
+    /**
+     * @return 疑惑値配列のサイズ
+     */
+    public int getLength() {
+    	return values.length;
     }
 
-    public double getValue() {
-        return value;
+    /**
+     * 疑惑値を取得するメソッド
+     * @param line 行数
+     * @return 疑惑値
+     */
+    public double get(int line) {
+    	if(line<0||values.length<=line)return 0;
+    	return values[line];
     }
 
-    /* =====================
-     * 並び替え（降順）
-     * ===================== */
-
-    @Override
-    public int compareTo(Suspiciousness other) {
-        return Double.compare(other.value, this.value);
+	/**
+	 * 疑惑地を更新するメソッド
+	 * @param line 行数
+	 * @param value 疑惑値
+	 */
+    public void set(int line, double value) {
+    	if(0<line||line<=values.length)values[line]=value;
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s:%d -> %f",className,line,value);
-    }
 }

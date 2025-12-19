@@ -3,11 +3,10 @@ package basic_sbfl_engine.runner;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO URLClassLoaderにしたほうがいいかも
-//TODO findAllClassの作成
-
 /**
- * バイト配列をJVMに読み込んで実行可能にするクラス
+ * バイト配列をJVMに読み込んで実行可能にするクラス<br>
+ * findClassをオーバーライドしており、
+ * addDefinition()で登録したクラスは実行中に自動で読み込む
  */
 public class MemoryClassLoader extends ClassLoader {
     private final Map<String, byte[]> definitions = new HashMap<>();
@@ -21,10 +20,6 @@ public class MemoryClassLoader extends ClassLoader {
         definitions.put(fqcn, bytes);
     }
     
-    /**
-     * クラスバイトコードを見つけて defineClass する
-     * @return defineClassが返すClass<?>
-     */
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         final byte[] bytes = definitions.get(name);
