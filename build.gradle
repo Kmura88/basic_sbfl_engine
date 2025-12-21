@@ -26,20 +26,19 @@ repositories {
 dependencies {
 	implementation 'org.jacoco:org.jacoco.core:0.8.11'
     implementation 'org.jacoco:org.jacoco.report:0.8.11'
-    //implementation 'org.jacoco:org.jacoco.agent:0.8.11' // 不要かも
     implementation 'junit:junit:4.12'
+    implementation 'info.picocli:picocli:4.7.7'
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation("org.assertj:assertj-core:3.11.1")
 }
-/*
+
 application {
-    mainClass = 'LGMatcherJsonExporter.App'
+    mainClass = 'basic_sbfl_engine.App'
 }
 
 
 shadowJar {
     manifest {
-        attributes 'Main-Class': 'LGMatcherJsonExporter.App'
+        attributes 'Main-Class': 'basic_sbfl_engine.App'
     }
 }
-*/

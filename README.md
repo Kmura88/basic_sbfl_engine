@@ -1,22 +1,36 @@
-"# basic\_sbfl\_engine"
+# basic_sbfl_engine
 
-仕様memo
+JAVAプログラムに対して基本的なSBFLを行う。
+classファイルを与えることで動作する。
 
-・SBFLを行う
 
-・JAVAプログラムが対象
+## Requirements
+- JDK17+
+- junit4
 
-・junit4のテストを実行する
+## How To Use
 
-・JAVAプロジェクトへのpathは引数で与えることができる。
+classファイルは用意しておく必要がある。
 
-・複数クラスで動くプロジェクトに対してもSBFLを行うことができる
+### CUI
+```console
+$ ./gradlew shadowJar
+```
 
-・jacocoを利用する
+```console
+$ java -jar basic_sbfl_engine.jar -h
+```
+### In java project
 
-・各行のsuspeciousのスコアを算出し、CSV出力する
+```java
+SBFL sbfl = new Ochiai();
+sbfl.compute("./example",null,null,3000);
+List<Suspiciousness> list = sbfl.getSusList();
+```
 
-・実行するtestを指定することができる
-
-・testが無限ループしたときの対策にタイムアウト処理がある
-
+## spec
+- classファイルはフォルダを再帰的に全探索するため、階層構造に縛りがない
+- 複数クラスで動くプロジェクトに対してもSBFLを行うことができる
+- testが無限ループしたときの対策にタイムアウト処理がある
+- 実行するtestクラスの指定が可能
+- 計測対象のクラスの指定が可能

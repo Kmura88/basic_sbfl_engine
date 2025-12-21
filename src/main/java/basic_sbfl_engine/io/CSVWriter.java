@@ -22,10 +22,10 @@ public class CSVWriter {
 
             for (Suspiciousness sus : list) {
                 String className = sus.getClassName();
-                int len = sus.getLength();
+                int len = sus.getMaxLine();
 
                 // 1スタートで書き出す
-                for (int line = 1; line < len; line++) {
+                for (int line = 1; line <= len; line++) {
                     double value = sus.get(line);
                     bw.write(className + "," + line + "," + value);
                     bw.newLine();

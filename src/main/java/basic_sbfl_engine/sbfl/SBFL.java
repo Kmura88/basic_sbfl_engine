@@ -1,26 +1,44 @@
 package basic_sbfl_engine.sbfl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import basic_sbfl_engine.data.Suspiciousness;
 import basic_sbfl_engine.data.TestResult;
+import basic_sbfl_engine.io.ClassPathScanner;
+import basic_sbfl_engine.runner.JUnitRunner;
 
 /**
  * TestResult配列からef, nf, ep, npを計算し、Suspiciousnessを生成する
  */
 public abstract class SBFL {
 
-
-    private List<Suspiciousness> susList;    // 結果保持用
+    private List<Suspiciousness> susList;     // 結果保持用
     private Map<String, int[][]> spectrumData;// Map<ClassName, int[行番号][0=ef, 1=ep]>
     
     // 全体のテスト数
     private int totalFailed;
     private int totalPassed;
 
+    /**
+     * フォルダー内のclassファイルを再帰的に全探索してSBFLを行う
+     * @param FolderPath classファイルが有るフォルダーへのパス
+     * @param testClasses 実行したいtestクラス名 (nullなら全testになる)
+     * @param targetClassNames test結果が欲しいクラス名 (nullなら全クラスになる)
+     * @param timeout タイムアウト時間
+     * @throws IOException
+     */
+    public void compute(String FolderPath, List<String> testClassNames,
+    					Set<String> targetClassNames, long timeout) throws IOException {
+    	JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan(FolderPath), timeout);
+    	junitRunner.setTargetClassNames(targetClassNames);
+    	compute(junitRunner.runTests(testClassNames));
+    }
+    
     /**
      * 計算を実行する
      * @param testResults テスト結果のリスト
@@ -66,11 +84,9 @@ public abstract class SBFL {
     private void countExecutions(List<TestResult> testResults) {
         for (TestResult tr : testResults) {
             boolean isPassed = tr.isPassed();
-            if (isPassed) {
-                this.totalPassed++;
-            } else {
-                this.totalFailed++;
-            }
+            
+            if (isPassed) this.totalPassed++;
+            else this.totalFailed++;
 
             for (String className : tr.getClassName()) {
                 if (!spectrumData.containsKey(className)) continue;
@@ -81,11 +97,8 @@ public abstract class SBFL {
                 // 行ごとのカバレッジを確認
                 for (int line = 1; line < length; line++) {
                     if (tr.getCoverage(className, line)) {
-                        if (isPassed) {
-                            lines[line][1]++; // ep++
-                        } else {
-                            lines[line][0]++; // ef++
-                        }
+                        if (isPassed) lines[line][1]++; // ep++
+                        else lines[line][0]++; // ef++
                     }
                 }
             }
@@ -100,23 +113,24 @@ public abstract class SBFL {
             String className = entry.getKey();
             int[][] lines = entry.getValue();
             
-            Suspiciousness susp = new Suspiciousness(className, lines.length);
-
+            double[] score = new double[lines.length + 1];//1スタートのため+1
+            
             for (int line = 1; line < lines.length; line++) {
                 double ef = lines[line][0];
                 double ep = lines[line][1];
                 double nf = this.totalFailed - ef;
                 double np = this.totalPassed - ep;
                 
-                double score = formula(ef, nf, ep, np);
-                susp.set(line, score);
+                score[line] = formula(ef, nf, ep, np);
             }
-            susList.add(susp);
+            susList.add(new Suspiciousness(className, score));
         }
     }
     
     /**
-     * 指定されたクラス・行の ef を取得
+     * @param className クラス名
+     * @param line 行数
+     * @return 指定されたクラス・行の ef
      */
     public double getEf(String className, int line) {
         if (isValid(className, line)) {
@@ -126,7 +140,9 @@ public abstract class SBFL {
     }
     
     /**
-     * 指定されたクラス・行の ep を取得
+     * @param className クラス名
+     * @param line 行数
+     * @return 指定されたクラス・行の ep
      */
     public double getEp(String className, int line) {
         if (isValid(className, line)) {
@@ -134,9 +150,11 @@ public abstract class SBFL {
         }
         return 0;
     }
-    
+
     /**
-     * 指定されたクラス・行の nf を取得
+     * @param className クラス名
+     * @param line 行数
+     * @return 指定されたクラス・行の nf
      */
     public double getNf(String className, int line) {
         if (isValid(className, line)) {
@@ -147,7 +165,9 @@ public abstract class SBFL {
     }
     
     /**
-     * 指定されたクラス・行の np を取得
+     * @param className クラス名
+     * @param line 行数
+     * @return 指定されたクラス・行の np
      */
     public double getNp(String className, int line) {
         if (isValid(className, line)) {
@@ -155,6 +175,20 @@ public abstract class SBFL {
             return this.totalPassed - ep;
         }
         return 0;
+    }
+    
+    /**
+     * @return 落ちたテスト数
+     */
+    public int getTotalFailed() {
+    	return this.totalFailed;
+    }
+    
+    /**
+     * @return 通ったテスト数
+     */
+    public int getTotalPassed() {
+    	return this.totalPassed;
     }
     
     /**

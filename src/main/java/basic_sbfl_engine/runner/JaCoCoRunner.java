@@ -10,6 +10,7 @@ import org.jacoco.core.runtime.RuntimeData;
 /**
  * Jacocoを利用してカバレッジ計測を行うクラス <br>
  * startup() → collect() → shutdown()が一連の流れ <br>
+ * shutdown()後の 再startup()は不可 <br>
  * 計測対象は事前にInstrumentしておく必要がある
  */
 public class JaCoCoRunner {
@@ -27,7 +28,7 @@ public class JaCoCoRunner {
     }
 
     /**
-     * バイト配列のinstrument化にはこのインスタンスを利用
+     * byte配列のinstrument化にはこのインスタンスを利用
      * @return Instrumenterインスタンス
      */
     public Instrumenter getInstrumenter() {
@@ -39,10 +40,8 @@ public class JaCoCoRunner {
      * @return ExecutionDataStore
      */
     public ExecutionDataStore collect() {
-    	// 
     	final ExecutionDataStore executionData = new ExecutionDataStore();
-    	final SessionInfoStore sessionInfos    = new SessionInfoStore();
-    	runtimedata.collect(executionData, sessionInfos, false);
+    	runtimedata.collect(executionData, new SessionInfoStore(), false);
     	return executionData;
     }
 
