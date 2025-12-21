@@ -12,7 +12,10 @@ classファイルを与えることで動作する。
 
 classファイルは用意しておく必要がある。
 
-### CUI
+### example - CUI
+
+./gradlewは必須
+
 ```console
 $ ./gradlew shadowJar
 ```
@@ -20,7 +23,12 @@ $ ./gradlew shadowJar
 ```console
 $ java -jar basic_sbfl_engine.jar -h
 ```
-### In java project
+
+```console
+$ java -jar basic_sbfl_engine.jar -p ./example -o result.csv -t example.TriangleTest -c example.Triangle
+```
+
+### example - In java project
 
 ```java
 SBFL sbfl = new Ochiai();
@@ -34,3 +42,4 @@ List<Suspiciousness> list = sbfl.getSusList();
 - testが無限ループしたときの対策にタイムアウト処理がある
 - 実行するtestクラスの指定が可能
 - 計測対象のクラスの指定が可能
+
