@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import basic_sbfl_engine.data.Suspiciousness;
 import basic_sbfl_engine.data.TestResult;
@@ -24,23 +23,31 @@ public abstract class SBFL {
     private int totalFailed;
     private int totalPassed;
 
+    
     /**
-     * フォルダー内のclassファイルを再帰的に全探索してSBFLを行う
-     * @param FolderPath classファイルが有るフォルダーへのパス
-     * @param testClasses 実行したいtestクラス名 (nullなら全testになる)
-     * @param targetClassNames test結果が欲しいクラス名 (nullなら全クラスになる)
-     * @param timeout タイムアウト時間
-     * @throws IOException
+     * 設定済みのJUnitRunnerを受け取って計算するメソッド<br>
+     * JunitRunnerに細かい設定をしたいときに使う
+     * @param junitRunner
+     * @param testClasses 実行したいテストクラス
      */
-    public void compute(String FolderPath, List<String> testClassNames,
-    					Set<String> targetClassNames, long timeout) throws IOException {
-    	JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan(FolderPath), timeout);
-    	junitRunner.setTargetClassNames(targetClassNames);
-    	compute(junitRunner.runTests(testClassNames));
+    public void compute(JUnitRunner junitRunner, List<String> testClasses) {
+        compute(junitRunner.runTests(testClasses));
     }
     
     /**
-     * 計算を実行する
+     * フォルダー内のclassファイルを再帰的に全探索してSBFLを行う<br>
+     * パスから全部おまかせで実行するメソッド<br>
+     * @param FolderPath classファイルが有るフォルダーへのパス
+     * @param timeout タイムアウト時間
+     * @throws IOException
+     */
+    public void compute(String FolderPath, long timeout) throws IOException {
+    	JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan(FolderPath), timeout);
+    	compute(junitRunner.runTests(null));
+    }
+    
+    /**
+     * testResults から ef, nf, ep, npを計算する
      * @param testResults テスト結果のリスト
      */
     public void compute(List<TestResult> testResults) {

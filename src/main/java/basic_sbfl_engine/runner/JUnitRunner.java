@@ -1,6 +1,8 @@
 package basic_sbfl_engine.runner;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,7 @@ public class JUnitRunner {
     private ExecutionDataAnalyzer executionDataAnalyzer;
     private final Map<String, byte[]> classDefinitions; // <fqcn,バイトコード> 
     private Set<String> targetClassNames;
+    private boolean suppressOutput = true; //出力を抑制するか
 
     /**
      * @param ClassDefinitions 解析対象クラスのバイトコード
@@ -44,6 +47,16 @@ public class JUnitRunner {
         this.timeout = timeout;
         this.classDefinitions = classDefinitions;
     }
+    
+    
+    /**
+     * テスト実行中の標準出力・エラー出力を抑制するか設定する
+     * @param suppressOutput trueなら出力削除、falseなら表示
+     */
+    public void setSuppressOutput(boolean suppressOutput) {
+        this.suppressOutput = suppressOutput;
+    }
+    
     
     /**
      * TestResultの収集対象のクラスを指定できる<br>
@@ -142,13 +155,25 @@ public class JUnitRunner {
 
         boolean passed = false;
         ExecutorService executor = Executors.newSingleThreadExecutor();
+        
+        // 2. 元のストリームを退避
+        PrintStream originalOut = System.out;
+        PrintStream originalErr = System.err;
 
         try {
-            // 2. JUnit実行タスクの作成
+   
+        	if (this.suppressOutput) {
+        		// 3. システム出力を無効化ストリームにセット
+                PrintStream nullStream = getNullPrintStream();
+                System.setOut(nullStream);
+                System.setErr(nullStream);
+            }
+        	
+            // 4. JUnit実行タスクの作成
             Request request = Request.method(testClass, methodName);
             Callable<Result> task = () -> new JUnitCore().run(request);
             
-            // 3. タイムアウト付きで実行
+            // 5. タイムアウト付きで実行
             Future<Result> future = executor.submit(task);
             Result result = future.get(timeout, TimeUnit.MILLISECONDS);
             
@@ -161,6 +186,11 @@ public class JUnitRunner {
             e.printStackTrace();
             passed = false;
         } finally {
+        	// 6. 変更していた場合のみ元のストリームに戻す
+        	if (this.suppressOutput) {
+                System.setOut(originalOut);
+                System.setErr(originalErr);
+            }
             executor.shutdownNow();
         }
 
@@ -174,10 +204,10 @@ public class JUnitRunner {
     
     private List<String> resolveTestClassNames(List<String> testClassNames) {
         if (testClassNames == null) {
-        	// nullの場合、全テストクラスを取得する
+        	// 引数がnullの場合、全テストクラスを取得する
         	List<String> resolvedTestClassNames = new ArrayList<>();
         	for (String fqcn : classDefinitions.keySet()) {
-        		if(fqcn.endsWith("Test"));{
+        		if(fqcn.endsWith("Test")){
         			// クラス名の末尾がTest ならば テストクラス
         			resolvedTestClassNames.add(fqcn);
         		}
@@ -185,5 +215,18 @@ public class JUnitRunner {
             return resolvedTestClassNames;
         }
         return testClassNames;
+    }
+    
+    /**
+     * データを捨てるPrintStreamを作成するメソッド
+     * @return 出力能力のないPrintStream
+     */
+    private PrintStream getNullPrintStream() {
+        return new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) {/* 何もしない (データを捨てる)*/}
+            @Override
+            public void write(byte[] b, int off, int len) {/* 何もしない (データを捨てる)*/}
+        });
     }
 }

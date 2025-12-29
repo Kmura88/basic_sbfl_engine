@@ -11,6 +11,16 @@ public class Triangle {
    * The following code contains 2 bugs.
    */
   public static int classify(int a, int b, int c) {
+    System.err.println("Hello");
+    try {
+            // わざと例外を起こす（0 で割る）
+            int x = 1 / 0;
+            System.out.println("ここには絶対に来ない: " + x);
+        } catch (Exception e) {
+            // 絶対に実行される
+            e.printStackTrace();
+        }
+
     if (a <= 0 || b <= 0 || c <= 0) {
       return -1;
     }
