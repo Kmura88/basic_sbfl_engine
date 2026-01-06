@@ -41,15 +41,15 @@ $ java -jar basic_sbfl_engine.jar -p ./example -o result.csv -t example.Triangle
 
 ```java
 SBFL sbfl = new Ochiai();
-sbfl.compute("./example",3000);
-List<Suspiciousness> list = sbfl.getSusList();
-```
 
-```java
-SBFL sbfl = new Ochiai();
-JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan("./example"), 3000);
-junitRunner.setTargetClassNames(targetClassNames);
-sbfl.compute(junitRunner, testClassNames);
+String folderPath = "./example"; // Folder which contains class Files.
+List<String> testClassNames   = null; // ex : ["com.example.MainTest"]
+Set<String>  targetClassNames = null; // ex : ["com.example.Main"]
+long timeout = 3000; // ms
+
+sbfl.compute(folderPath, testClassNames, targetClassNames, timeout);
+
+List<Suspiciousness> list = sbfl.getSusList();
 ```
 
 ## spec
@@ -57,5 +57,4 @@ sbfl.compute(junitRunner, testClassNames);
 - 複数クラスで動くプロジェクトに対してもSBFLを行うことができる
 - testが無限ループしたときの対策にタイムアウト処理がある
 - 実行するtestクラスの指定が可能 ex:`com.example.MainTest`
-
 - 計測対象のクラスの指定が可能 ex:`com.example.Main`

@@ -13,7 +13,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name="basic_sbfl_engine", mixinStandardHelpOptions = true, version="1.1")
+@Command(name="basic_sbfl_engine", mixinStandardHelpOptions = true, version="1.2")
 public class App implements Runnable{
 	
 	@Option(names = {"-p","--path"}, description="Path to Folder which contains class files", required = true)
@@ -50,7 +50,7 @@ public class App implements Runnable{
             
             // 1. 計算
             System.out.println("Running SBFL...");
-            sbfl.compute(junitRunner, testClassNames);
+            sbfl.compute(junitRunner.runTests(testClassNames));
             
             // 2. 結果の出力
             if(CSVPath !=null) {
