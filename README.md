@@ -47,7 +47,7 @@ List<Suspiciousness> list = sbfl.getSusList();
 
 ```java
 SBFL sbfl = new Ochiai();
-JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan(classFolderPath), timeout);
+JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan("./example"), 3000);
 junitRunner.setTargetClassNames(targetClassNames);
 sbfl.compute(junitRunner, testClassNames);
 ```
@@ -57,4 +57,5 @@ sbfl.compute(junitRunner, testClassNames);
 - 複数クラスで動くプロジェクトに対してもSBFLを行うことができる
 - testが無限ループしたときの対策にタイムアウト処理がある
 - 実行するtestクラスの指定が可能 ex:`com.example.MainTest`
+
 - 計測対象のクラスの指定が可能 ex:`com.example.Main`
