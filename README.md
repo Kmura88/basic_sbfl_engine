@@ -58,3 +58,86 @@ List<Suspiciousness> list = sbfl.getSusList();
 - testが無限ループしたときの対策にタイムアウト処理がある
 - 実行するtestクラスの指定が可能 ex:`com.example.MainTest`
 - 計測対象のクラスの指定が可能 ex:`com.example.Main`
+
+<details> <summary> 内部構造メモ </summary>
+
+```mermaid
+classDiagram
+    %% --- Main Controller ---
+    class App {
+        +main()
+        +run()
+    }
+
+    %% --- SBFL Logic ---
+    class SBFL {
+        <<Abstract>>
+        -susList : List~Suspiciousness~
+        +compute(List~TestResult~)
+        #formula(ef, nf, ep, np)*
+    }
+
+    class Ochiai {
+        #formula()
+    }
+
+    %% --- Test Runner ---
+    class JUnitRunner {
+        +runTests() : List~TestResult~
+        -runSingleMethod()
+    }
+
+    class JaCoCoRunner {
+        +startup()
+        +collect()
+    }
+
+    class ExecutionDataAnalyzer {
+        +analyze()
+    }
+
+    class MemoryClassLoader {
+        +addDefinition()
+    }
+
+    %% --- Data Objects ---
+    class TestResult {
+        -testName : String
+        -passed : boolean
+        -coverages : Map
+    }
+
+    class Suspiciousness {
+        -className : String
+        -values : double[]
+    }
+
+    %% --- Utils ---
+    class ClassPathScanner {
+        +scan()
+    }
+    class CSVWriter {
+        +write()
+    }
+
+    %% --- Relationships ---
+    %% Inheritance
+    SBFL <|-- Ochiai
+
+    %% App Dependencies (Flow)
+    App ..> ClassPathScanner : 1. クラス探索
+    App ..> JUnitRunner : 2. テスト実行
+    App ..> SBFL : 3. 疑惑値計算
+    App ..> CSVWriter : 4. CSV出力
+
+    %% Runner Internals
+    JUnitRunner *-- JaCoCoRunner : カバレッジ計測
+    JUnitRunner *-- ExecutionDataAnalyzer : データ解析
+    JUnitRunner *-- MemoryClassLoader : クラスロード
+    JUnitRunner ..> TestResult : 生成 (Output)
+
+    %% SBFL Logic
+    SBFL ..> TestResult : 利用 (Input)
+    SBFL *-- Suspiciousness : 生成 (Result)
+```
+</details>
