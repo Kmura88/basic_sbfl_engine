@@ -53,12 +53,12 @@ public class App implements Runnable{
             sbfl.compute(junitRunner.runTests(testClassNames));
             
             // 2. 結果の出力
+            System.out.println("TotalPassed : " + sbfl.getTotalPassed());
+        	System.out.println("TotalFailed : " + sbfl.getTotalFailed());
             if(CSVPath !=null) {
             	System.out.println("Writing results to: " + CSVPath);
-            	CSVWriter.write(sbfl.getSusList(), CSVPath);
+            	CSVWriter.write(sbfl, CSVPath);
             }else {
-            	System.out.println("TotalPassed : " + sbfl.getTotalPassed());
-            	System.out.println("TotalFailed : " + sbfl.getTotalFailed());
             	System.out.println("[Info] : Use the -o option to get more detailed output.");
             }
             System.out.println("Done.");

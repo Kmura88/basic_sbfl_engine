@@ -17,7 +17,7 @@ import basic_sbfl_engine.runner.JUnitRunner;
  */
 public abstract class SBFL {
 
-    private List<Suspiciousness> susList;     // 結果保持用
+    private List<Suspiciousness> susList;     // Suspiciousness保持用
     private Map<String, int[][]> spectrumData;// Map<ClassName, int[行番号][0=ef, 1=ep]>
     
     // 全体のテスト数
