@@ -9,8 +9,7 @@ import java.util.Set;
 
 import basic_sbfl_engine.data.Suspiciousness;
 import basic_sbfl_engine.data.TestResult;
-import basic_sbfl_engine.io.ClassPathScanner;
-import basic_sbfl_engine.runner.JUnitRunner;
+import basic_sbfl_engine.runner.TestRunner;
 
 /**
  * TestResult配列からef, nf, ep, npを計算し、Suspiciousnessを生成する
@@ -34,9 +33,9 @@ public abstract class SBFL {
      */
     public void compute(String folderPath, List<String> testClassNames,
     					Set<String> targetClassNames, long timeout) throws IOException {
-    	JUnitRunner junitRunner = new JUnitRunner(ClassPathScanner.scan(folderPath), timeout);
-    	junitRunner.setTargetClassNames(targetClassNames);
-    	compute(junitRunner.runTests(testClassNames));
+    	
+    	compute(TestRunner.run(folderPath, testClassNames, targetClassNames, timeout));
+    	
     }
     
     /**

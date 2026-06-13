@@ -13,7 +13,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name="basic_sbfl_engine", mixinStandardHelpOptions = true, version="1.3")
+@Command(name="basic_sbfl_engine", mixinStandardHelpOptions = true, version="1.4")
 public class App implements Runnable{
 	
 	@Option(names = {"-p","--path"}, description="Path to Folder which contains class files", required = true)
