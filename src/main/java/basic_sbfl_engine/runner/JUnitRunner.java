@@ -199,7 +199,7 @@ public class JUnitRunner {
         CoverageBuilder cb = executionDataAnalyzer.analyze(eds);
         
         // 5. TestResultの生成
-        return new TestResult(methodName, cb, passed);
+        return new TestResult(testClass.getName(), methodName, cb, passed);
     }
     
     private List<String> resolveTestClassNames(List<String> testClassNames) {
