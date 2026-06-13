@@ -40,6 +40,7 @@ $ java -jar basic_sbfl_engine.jar -p ./example -o result.csv -t example.Triangle
 ### example - In java project
 
 ```java
+// SBFLの計算をしたい場合
 SBFL sbfl = new Ochiai();
 
 String folderPath = "./example"; // Folder which contains class Files.
@@ -50,6 +51,12 @@ long timeout = 3000; // ms
 sbfl.compute(folderPath, testClassNames, targetClassNames, timeout);
 
 List<Suspiciousness> list = sbfl.getSusList();
+```
+
+
+```java
+// テストの実行情報だけ欲しい場合
+List<TestResult> Results = TestRunner.run(folderPath, testClassNames, targetClassNames, timeout);
 ```
 
 ## spec
