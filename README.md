@@ -45,14 +45,16 @@ List<String> testClassNames   = null; // ex : ["com.example.MainTest"]
 Set<String>  targetClassNames = null; // ex : ["com.example.Main"]
 long timeout = 3000; // ms
 
+
 // SBFLの計算をしたい場合
 SBFL sbfl = new Ochiai();
 sbfl.compute(folderPath, testClassNames, targetClassNames, timeout);
+List<Suspiciousness> list = sbfl.getSusList();
+
 
 // テストの実行情報だけ欲しい場合
 List<TestResult> Results = TestRunner.run(folderPath, testClassNames, targetClassNames, timeout);
 
-List<Suspiciousness> list = sbfl.getSusList();
 ```
 
 ## spec
