@@ -154,6 +154,7 @@ public class JUnitRunner {
         jacocoRunner.reset();
 
         boolean passed = false;
+        boolean timedOut = false;
         ExecutorService executor = Executors.newSingleThreadExecutor();
         
         // 2. 元のストリームを退避
@@ -173,15 +174,18 @@ public class JUnitRunner {
             Request request = Request.method(testClass, methodName);
             Callable<Result> task = () -> new JUnitCore().run(request);
             
-            // 5. タイムアウト付きで実行
+            // 5. タイムアウト付きで実行 (タイムアウトは失敗扱い)
             Future<Result> future = executor.submit(task);
-            Result result = future.get(timeout, TimeUnit.MILLISECONDS);
-            
-            passed = result.wasSuccessful();
-
-        } catch (TimeoutException e) {
-            System.err.println("Test timed out: " + methodName);
-            passed = false;
+           
+            try {
+            	 Result result = future.get(timeout, TimeUnit.MILLISECONDS);
+            	 passed = result.wasSuccessful();
+            } catch (TimeoutException e) {
+            	System.err.println("Test timed out: " + methodName);
+            	passed   = false;
+            	timedOut = true;
+            	future.cancel(true); // 実行中スレッドに割り込みを送る。
+            }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             passed = false;
@@ -191,14 +195,26 @@ public class JUnitRunner {
                 System.setOut(originalOut);
                 System.setErr(originalErr);
             }
+        	
             executor.shutdownNow();
+            
+            // 7. ワーカースレッドが完全終了するまで待機
+            // これをしないとタイムアウトしたゾンビスレッドがjacocoランタイムを汚染し続けるかも
+            try {
+            	if(!executor.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
+            		System.err.println("Warning: worker thread did not terminate: " + methodName);
+            	}
+            } catch (InterruptedException e){
+            	Thread.currentThread().interrupt();
+            }
         }
 
-        // 4. カバレッジデータの収集・解析
+        // 8. カバレッジデータの収集・解析
+        // タイムアウト時はゾンビスレッドの残留書き込みが混入しうるため空のカバレッジにする
         ExecutionDataStore eds = jacocoRunner.collect();
-        CoverageBuilder cb = executionDataAnalyzer.analyze(eds);
+        CoverageBuilder cb = timedOut ? new CoverageBuilder() : executionDataAnalyzer.analyze(eds);
         
-        // 5. TestResultの生成
+        // 9. TestResultの生成
         return new TestResult(testClass.getName(), methodName, cb, passed);
     }
     
