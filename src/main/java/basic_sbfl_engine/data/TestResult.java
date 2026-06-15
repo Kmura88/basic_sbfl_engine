@@ -38,42 +38,15 @@ public class TestResult {
         this.coverages = convertCoverage(coverageBuilder);
     }
     
-    /**
-     * @return testクラス名
-     */
-    public String getTestClassName() {
-        return testClassName;
-    }
-
-    /**
-     * 
-     * @return testメソッド名
-     */
-    public String getTestMethodName() {
-        return testMethodName;
-    }
-    
-    /**
-     * クラス名とメソッド名から作られる単体テスト固有のID
-     * @return testID
-     */
-    public long getTestId() {
-        return testId;
-    }
-
-    /**
-     * @return 成功テストならtrue
-     */
-    public boolean isPassed() {
-        return passed;
-    }
+    public String getTestClassName()  { return testClassName;  }
+    public String getTestMethodName() { return testMethodName; }
+    public long getTestId()   { return testId;}
+    public boolean isPassed() { return passed;}
     
     /**
      * @return 保存しているclass名の集合
      */
-    public Set<String> getClassName() {
-        return coverages.keySet();
-    }
+    public Set<String> getClassName() { return coverages.keySet();}
     
 
     /**
