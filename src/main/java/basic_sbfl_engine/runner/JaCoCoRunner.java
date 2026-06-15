@@ -41,7 +41,7 @@ public class JaCoCoRunner {
      */
     public ExecutionDataStore collect() {
     	final ExecutionDataStore executionData = new ExecutionDataStore();
-    	runtimedata.collect(executionData, new SessionInfoStore(), true);
+    	runtimedata.collect(executionData, new SessionInfoStore(), false);
     	return executionData;
     }
 
