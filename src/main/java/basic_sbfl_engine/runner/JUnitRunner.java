@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -127,7 +129,10 @@ public class JUnitRunner {
                 Class<?> testClass = memoryClassLoader.loadClass(testClassName);
 
                 // 3. @testアノテーションの付いたメソッドを実行
-                for (Method method : testClass.getDeclaredMethods()) {
+                // メソッドの実行順は名前順に一意に定める
+                Method[] methods = testClass.getDeclaredMethods();
+                Arrays.sort(methods, Comparator.comparing(Method::getName));
+                for (Method method : methods) {
                     if (method.isAnnotationPresent(Test.class)) {
                          TestResult tr = runSingleMethod(testClass, method.getName());
                          results.add(tr);
